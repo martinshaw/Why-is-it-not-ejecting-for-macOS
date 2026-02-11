@@ -1,0 +1,27 @@
+package utilities
+
+import (
+	"os/exec"
+	"runtime"
+	"strconv"
+	"strings"
+)
+
+func IsMacOs() bool {
+	return runtime.GOOS == "darwin"
+}
+
+func GetLineCountOfOutput(output string) int {
+	cmd := exec.Command("wc", "-l")
+	cmd.Stdin = strings.NewReader(output)
+	lineCountOutput, err := cmd.Output()
+	if err != nil {
+		return 0
+	}
+	lineCountStr := strings.TrimSpace(string(lineCountOutput))
+	lineCount, err := strconv.Atoi(lineCountStr)
+	if err != nil {
+		return 0
+	}
+	return lineCount
+}
