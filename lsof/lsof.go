@@ -18,14 +18,12 @@ type OpenFile struct {
 }
 
 func executeCommandForOpenFilesByDiskMountPrefix(mountPathPrefix string) (string, error) {
-	println(123, mountPathPrefix)
 	cmd := exec.Command("lsof", "+D", mountPathPrefix)
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
 
-	println(456)
 	return string(output), nil
 }
 

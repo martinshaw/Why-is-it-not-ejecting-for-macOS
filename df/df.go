@@ -3,12 +3,10 @@ package df
 import (
 	"bufio"
 	"fmt"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
-	"github.com/sanity-io/litter"
 	"martinshaw.co/ejecting/utilities"
 )
 
@@ -31,12 +29,7 @@ func executeCommandForDiskInfo() (string, error) {
 }
 
 func parseLineOfOutput(line string) (Disk, error) {
-	// fields := strings.FieldsFunc(line, func(r rune) bool {
-	// 	return r == '\t'
-	// })
 	fields := strings.Fields(line)
-	litter.Dump("yyy", fields)
-	os.Exit(0)
 
 	if len(fields) < 9 {
 		return Disk{}, fmt.Errorf("unexpected output format: %s", line)
@@ -55,7 +48,6 @@ func parseLineOfOutput(line string) (Disk, error) {
 	// isExternal := strings.HasPrefix(fields[0], "/dev/disk") && !strings.Contains(fields[0], "s1")
 	isExternal := strings.HasPrefix(fields[8], "/Volumes/") && !strings.Contains(fields[8], "Macintosh HD")
 
-	litter.Dump("xxx", fields)
 	return Disk{
 		Filesystem: fields[0],
 		Used:       uint64(used),
