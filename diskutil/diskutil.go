@@ -5,14 +5,8 @@ import (
 	"strings"
 
 	"howett.net/plist"
+	"martinshaw.co/ejecting/structs"
 )
-
-type DiskPartition struct {
-	DeviceIdentifier string `plist:"DeviceIdentifier"`
-	MountPoint       string `plist:"MountPoint"`
-	Size             int    `plist:"Size"`
-	VolumeName       string `plist:"VolumeName"`
-}
 
 func executeCommandForDiskInfo() (string, error) {
 	cmd := exec.Command("diskutil", "list", "-plist")
@@ -23,12 +17,12 @@ func executeCommandForDiskInfo() (string, error) {
 	return string(output), nil
 }
 
-func decodePlistOutputToDisks(plistOutput string) ([]DiskPartition, error) {
+func decodePlistOutputToDisks(plistOutput string) ([]structs.DiskPartition, error) {
 	decoder := plist.NewDecoder(strings.NewReader(plistOutput))
 
 	var data struct {
 		AllDisksAndPartitions []struct {
-			Partitions []DiskPartition `plist:"Partitions"`
+			Partitions []structs.DiskPartition `plist:"Partitions"`
 		} `plist:"AllDisksAndPartitions"`
 	}
 
@@ -36,7 +30,7 @@ func decodePlistOutputToDisks(plistOutput string) ([]DiskPartition, error) {
 		return nil, err
 	}
 
-	disks := make([]DiskPartition, 0)
+	disks := make([]structs.DiskPartition, 0)
 	for _, diskInfo := range data.AllDisksAndPartitions {
 		for _, partition := range diskInfo.Partitions {
 			if partition.MountPoint == "" ||
@@ -52,7 +46,7 @@ func decodePlistOutputToDisks(plistOutput string) ([]DiskPartition, error) {
 	return disks, nil
 }
 
-func GetDisks() ([]DiskPartition, error) {
+func GetDisks() ([]structs.DiskPartition, error) {
 	output, error := executeCommandForDiskInfo()
 	if error != nil {
 		return nil, error

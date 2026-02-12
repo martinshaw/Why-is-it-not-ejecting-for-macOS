@@ -7,16 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"martinshaw.co/ejecting/structs"
 	"martinshaw.co/ejecting/utilities"
 )
-
-type OpenFile struct {
-	CommandName string
-	CommandPath string
-	PID         int
-	User        string
-	Name        string
-}
 
 func executeLsofCommandForOpenFilesByDiskMountPrefix(mountPathPrefix string) (string, error) {
 	if !strings.HasSuffix(mountPathPrefix, "/") {
@@ -50,25 +43,25 @@ func executePsCommandByPid(pid int) (string, error) {
 	return string(output), nil
 }
 
-func parseLineOfOutput(line string) (OpenFile, error) {
+func parseLineOfOutput(line string) (structs.OpenFile, error) {
 	fields := strings.Fields(line)
 	if len(fields) < 9 {
-		return OpenFile{}, fmt.Errorf("unexpected output format: %s", line)
+		return structs.OpenFile{}, fmt.Errorf("unexpected output format: %s", line)
 	}
 
 	pid, error := strconv.Atoi(fields[1])
 	if error != nil {
-		return OpenFile{}, fmt.Errorf("error parsing PID for %s: %v", fields[0], error)
+		return structs.OpenFile{}, fmt.Errorf("error parsing PID for %s: %v", fields[0], error)
 	}
 
 	commandPath, error := executePsCommandByPid(pid)
 	if error != nil {
-		return OpenFile{}, fmt.Errorf("error executing ps command for PID %d: %v", pid, error)
+		return structs.OpenFile{}, fmt.Errorf("error executing ps command for PID %d: %v", pid, error)
 	}
 
 	name := strings.Join(fields[8:], " ")
 
-	return OpenFile{
+	return structs.OpenFile{
 		CommandName: fields[0],
 		CommandPath: strings.TrimSpace(commandPath),
 		PID:         pid,
@@ -77,14 +70,14 @@ func parseLineOfOutput(line string) (OpenFile, error) {
 	}, nil
 }
 
-func GetOpenFilesByDiskMountPrefix(mountPathPrefix string) ([]OpenFile, error) {
+func GetOpenFilesByDiskMountPrefix(mountPathPrefix string) ([]structs.OpenFile, error) {
 	output, error := executeLsofCommandForOpenFilesByDiskMountPrefix(mountPathPrefix)
 	if error != nil {
 		return nil, error
 	}
 
 	openFilesCount := utilities.GetLineCountOfOutput(output) - 1 // Subtract 1 for the header line
-	openFiles := make([]OpenFile, 0, openFilesCount)
+	openFiles := make([]structs.OpenFile, 0, openFilesCount)
 	isScanningHeaderRow := true
 
 	scanner := bufio.NewScanner(strings.NewReader(output))

@@ -1,27 +1,62 @@
 package output
 
 import (
-	"github.com/dustin/go-humanize"
-	"martinshaw.co/ejecting/diskutil"
-	"martinshaw.co/ejecting/lsof"
+	"encoding/json"
+	"flag"
+	"log"
+
+	"howett.net/plist"
 )
 
-func PrintDiskInfo(disk diskutil.DiskPartition) {
-	println(
-		"Disk:", disk.DeviceIdentifier, "\n",
-		"Mounted on:", disk.MountPoint, "\n",
-		"Size:", humanize.Bytes(uint64(disk.Size)), "\n",
-		"Size (Bytes):", disk.Size, "\n",
-		"Volume Name:", disk.VolumeName, "\n",
-	)
+func ParseFlags() *string {
+	formatFlag := flag.String("format", "indent", "Output format: 'indent', 'json' or 'plist-openstep', 'plist-xml', 'plist-binary'")
+
+	flag.Parse()
+
+	if *formatFlag != "indent" && *formatFlag != "json" && *formatFlag != "plist-openstep" && *formatFlag != "plist-xml" && *formatFlag != "plist-binary" {
+		log.Fatal("Invalid format specified. Use 'indent', 'json', 'plist-openstep', 'plist-xml' or 'plist-binary'.")
+	}
+
+	return formatFlag
 }
 
-func PrintOpenFileInfo(openFile lsof.OpenFile) {
-	println(
-		"	Command Name:", openFile.CommandName, "\n",
-		"	Command Path:", openFile.CommandPath, "\n",
-		"	PID:", openFile.PID, "\n",
-		"	User:", openFile.User, "\n",
-		"	File Name:", openFile.Name, "\n",
-	)
+func PrintDataByFormat(formatFlag *string, data interface{}) {
+	switch *formatFlag {
+	case "indent":
+		PrintDataInIndentedFormat(data)
+	case "json":
+		PrintDataInJsonFormat(data)
+	case "plist-openstep":
+		PrintDataInPlistFormat(data, plist.OpenStepFormat)
+	case "plist-xml":
+		PrintDataInPlistFormat(data, plist.XMLFormat)
+	case "plist-binary":
+		PrintDataInPlistFormat(data, plist.BinaryFormat)
+	default:
+		log.Fatal("Invalid format specified. Use 'indent', 'json' or 'plist'.")
+	}
+}
+
+func PrintDataInIndentedFormat(data interface{}) {
+	jsonString, error := json.MarshalIndent(data, "", "  ")
+	if error != nil {
+		log.Fatal("Error marshaling data to JSON:", error)
+	}
+	println(string(jsonString))
+}
+
+func PrintDataInJsonFormat(data interface{}) {
+	jsonString, error := json.Marshal(data)
+	if error != nil {
+		log.Fatal("Error marshaling data to JSON:", error)
+	}
+	println(string(jsonString))
+}
+
+func PrintDataInPlistFormat(data interface{}, format int) {
+	plistString, error := plist.Marshal(data, format)
+	if error != nil {
+		log.Fatal("Error marshaling data to plist:", error)
+	}
+	println(string(plistString))
 }
