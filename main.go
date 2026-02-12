@@ -2,41 +2,28 @@ package main
 
 import (
 	"log"
+	"os"
 
-	"martinshaw.co/ejecting/diskutil"
-	"martinshaw.co/ejecting/lsof"
+	"martinshaw.co/ejecting/darwinkit"
+	"martinshaw.co/ejecting/data"
 	"martinshaw.co/ejecting/output"
-	"martinshaw.co/ejecting/structs"
 	"martinshaw.co/ejecting/utilities"
 )
 
-// Ignore fucking darwinkit
-
 func main() {
-	formatFlag := output.ParseFlags()
+	formatFlag, uiFlag := output.ParseFlags()
 
 	if !utilities.IsMacOs() {
 		log.Fatal("This application is only supported on macOS.")
 	}
 
-	disks, error := diskutil.GetDisks()
-	data := make(structs.DisksWithOpenFiles, 0, len(disks))
-	if error != nil {
-		log.Fatal("Error retrieving disks:", error)
+	if uiFlag != nil && *uiFlag == "cli" {
+		data := data.DetermineData()
+		output.PrintDataByFormat(formatFlag, data)
+		os.Exit(0)
 	}
 
-	for _, disk := range disks {
-		openFiles, error := lsof.GetOpenFilesByDiskMountPrefix(disk.MountPoint)
-		if error != nil {
-			log.Printf("Warning: Error retrieving open files for disk %s: %v", disk.MountPoint, error)
-			continue
-		}
-
-		data = append(data, structs.DiskWithOpenFiles{
-			Disk:      disk,
-			OpenFiles: openFiles,
-		})
+	if uiFlag != nil && *uiFlag == "menubar" {
+		darwinkit.StartMenubarUi()
 	}
-
-	output.PrintDataByFormat(formatFlag, data)
 }

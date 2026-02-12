@@ -8,16 +8,20 @@ import (
 	"howett.net/plist"
 )
 
-func ParseFlags() *string {
+func ParseFlags() (*string, *string) {
 	formatFlag := flag.String("format", "indent", "Output format: 'indent', 'json' or 'plist-openstep', 'plist-xml', 'plist-binary'")
+	uiFlag := flag.String("ui", "cli", "User interface: 'cli' or 'menubar'")
 
 	flag.Parse()
 
 	if *formatFlag != "indent" && *formatFlag != "json" && *formatFlag != "plist-openstep" && *formatFlag != "plist-xml" && *formatFlag != "plist-binary" {
 		log.Fatal("Invalid format specified. Use 'indent', 'json', 'plist-openstep', 'plist-xml' or 'plist-binary'.")
 	}
+	if *uiFlag != "cli" && *uiFlag != "menubar" {
+		log.Fatal("Invalid UI specified. Use 'cli' or 'menubar'.")
+	}
 
-	return formatFlag
+	return formatFlag, uiFlag
 }
 
 func PrintDataByFormat(formatFlag *string, data interface{}) {
