@@ -36,14 +36,17 @@ This project is written in Go. To compile it, you need to have Go installed (ver
 2. Build the executable:
    ```sh
    go build
-   sudo chmod +X ./ejecting
    ```
-3. Run it
+3. Until we have a signed package, you will need to grant yourself permission to run this compiled binary;
+   - Run `./ejecting` once, which will trigger a permissions prompt on macOS. Press 'Done' on the prompt without granting permissions for now.
+   - Open 'System Settings' and navigate to 'Privacy & Security'.
+   - Scroll down to the message "'ejecting' was blocked to protect your Mac". Click 'Allow Anyway' next to this message.
+4. Run it
    ```sh
    ./ejecting -ui menubar # for native macOS menubar GUI
    ./ejecting -format json # for JSON output
    ```
-4. If you choose the menubar option, you can interact with the GUI to kill processes directly from there.
+5. If you choose the menubar option, you can interact with the GUI to kill processes directly from there.
 
 ## Example Output
 
