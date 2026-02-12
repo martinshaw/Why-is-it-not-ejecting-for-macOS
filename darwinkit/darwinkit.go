@@ -1,8 +1,6 @@
 package darwinkit
 
 import (
-	"runtime"
-
 	"github.com/progrium/darwinkit/macos/appkit"
 	"github.com/progrium/darwinkit/macos/foundation"
 	"github.com/progrium/darwinkit/objc"
@@ -12,7 +10,7 @@ const appName = "Why is it not ejecting? for macOS"
 
 func StartMenubarUi() {
 
-	runtime.LockOSThread()
+	// runtime.LockOSThread()
 
 	app := appkit.Application_SharedApplication()
 	app.SetActivationPolicy(appkit.ApplicationActivationPolicyAccessory)
@@ -62,18 +60,6 @@ func setMainMenu(app appkit.Application) {
 	mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Quit", "q", func(sender objc.Object) { app.Terminate(nil) }))
 	mainMenuItem.SetSubmenu(mainMenuMenu)
 	menu.AddItem(mainMenuItem)
-
-	testMenuItem := appkit.NewMenuItemWithSelector("", "", objc.Selector{})
-	testMenu := appkit.NewMenuWithTitle("Edit")
-	testMenu.AddItem(appkit.NewMenuItemWithSelector("Select All", "a", objc.Sel("selectAll:")))
-	testMenu.AddItem(appkit.MenuItem_SeparatorItem())
-	testMenu.AddItem(appkit.NewMenuItemWithSelector("Copy", "c", objc.Sel("copy:")))
-	testMenu.AddItem(appkit.NewMenuItemWithSelector("Paste", "v", objc.Sel("paste:")))
-	testMenu.AddItem(appkit.NewMenuItemWithSelector("Cut", "x", objc.Sel("cut:")))
-	testMenu.AddItem(appkit.NewMenuItemWithSelector("Undo", "z", objc.Sel("undo:")))
-	testMenu.AddItem(appkit.NewMenuItemWithSelector("Redo", "Z", objc.Sel("redo:")))
-	testMenuItem.SetSubmenu(testMenu)
-	menu.AddItem(testMenuItem)
 }
 
 func setSystemBar(app appkit.Application) {
@@ -87,7 +73,26 @@ func setSystemBar(app appkit.Application) {
 	item.Button().SetToolTip(appName)
 
 	menu := appkit.NewMenuWithTitle("ejecting")
-	menu.AddItem(appkit.NewMenuItemWithAction("Hide", "h", func(sender objc.Object) { app.Hide(nil) }))
-	menu.AddItem(appkit.NewMenuItemWithAction("Quit", "q", func(sender objc.Object) { app.Terminate(nil) }))
+	// menu.AddItem(appkit.NewMenuItemWithAction("Hide", "h", func(sender objc.Object) { app.Hide(nil) }))
+	// menu.AddItem(appkit.NewMenuItemWithAction("Quit", "q", func(sender objc.Object) { app.Terminate(nil) }))
 	item.SetMenu(menu)
+
+	// // Add a menu item for the counter
+	// counterMenuItem := appkit.NewMenuItem()
+	// counterMenuItem.SetTitle("Counter: 0")
+	// menu.AddItem(counterMenuItem)
+
+	// go func() {
+	// 	counter := 0
+
+	// 	// Update the counter every second
+	// 	for {
+	// 		dispatch.MainQueue().DispatchAsync(func() {
+	// 			counterMenuItem.SetTitle("Counter: " + strconv.Itoa(counter))
+	// 		})
+	// 		counter++
+	// 		time.Sleep(1 * time.Second)
+	// 	}
+	// }()
+
 }
