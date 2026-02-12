@@ -1,12 +1,18 @@
 package darwinkit
 
 import (
+	"strconv"
+
 	"github.com/progrium/darwinkit/macos/appkit"
 	"github.com/progrium/darwinkit/macos/foundation"
 	"github.com/progrium/darwinkit/objc"
+	"martinshaw.co/ejecting/data"
+	"martinshaw.co/ejecting/ps"
+	"martinshaw.co/ejecting/structs"
 )
 
 const appName = "Why is it not ejecting? for macOS"
+const shortAppName = "Why is it not ejecting?"
 
 func StartMenubarUi() {
 
@@ -17,28 +23,9 @@ func StartMenubarUi() {
 
 	delegate := &appkit.ApplicationDelegate{}
 	delegate.SetApplicationDidFinishLaunching(func(foundation.Notification) {
-		w := appkit.NewWindowWithSize(600, 400)
-		objc.Retain(&w)
-		w.SetTitle(appName)
-
-		// textView := appkit.TextView_ScrollableTextView()
-		// textView.SetTranslatesAutoresizingMaskIntoConstraints(false)
-		// tv := appkit.TextViewFrom(textView.DocumentView().Ptr())
-		// tv.SetAllowsUndo(true)
-		// tv.SetRichText(false)
-		// w.ContentView().AddSubview(textView)
-		// w.ContentView().LeadingAnchor().ConstraintEqualToAnchorConstant(textView.LeadingAnchor(), -10).SetActive(true)
-		// w.ContentView().TopAnchor().ConstraintEqualToAnchorConstant(textView.TopAnchor(), -10).SetActive(true)
-		// w.ContentView().TrailingAnchor().ConstraintEqualToAnchorConstant(textView.TrailingAnchor(), 10).SetActive(true)
-		// w.ContentView().BottomAnchor().ConstraintEqualToAnchorConstant(textView.BottomAnchor(), 10).SetActive(true)
-
-		w.MakeKeyAndOrderFront(nil)
-		w.Center()
+		// TODO: In the future, when I figure out how to get a piece of text to display (WTF!), I can add a welcome window that shows some basic info about the menubar ui and how to use it. For now, I'll just go straight to the menubar UI since that's the main focus of the app.
 
 		setSystemBar(app)
-
-		app.SetActivationPolicy(appkit.ApplicationActivationPolicyRegular)
-		app.ActivateIgnoringOtherApps(true)
 	})
 	delegate.SetApplicationWillFinishLaunching(func(foundation.Notification) {
 		setMainMenu(app)
@@ -51,48 +38,63 @@ func StartMenubarUi() {
 }
 
 func setMainMenu(app appkit.Application) {
-	menu := appkit.NewMenuWithTitle("main")
+	menu := appkit.NewMenuWithTitle(shortAppName)
 	app.SetMainMenu(menu)
 
 	mainMenuItem := appkit.NewMenuItemWithSelector("", "", objc.Selector{})
-	mainMenuMenu := appkit.NewMenuWithTitle("App")
-	mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Hide", "h", func(sender objc.Object) { app.Hide(nil) }))
+	mainMenuMenu := appkit.NewMenuWithTitle(shortAppName)
+	// mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Hide", "h", func(sender objc.Object) { app.Hide(nil) }))
+	// mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Close Welcome Window", "", func(sender objc.Object) {
+	// 	for _, window := range app.Windows() {
+	// 		window.Close()
+	// 	}
+	// }))
 	mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Quit", "q", func(sender objc.Object) { app.Terminate(nil) }))
 	mainMenuItem.SetSubmenu(mainMenuMenu)
 	menu.AddItem(mainMenuItem)
+}
+
+func refreshMenuWithData(menu appkit.Menu, latestData structs.DisksWithOpenFiles, app appkit.Application) {
+	latestData = data.DetermineData()
+
+	menu.RemoveAllItems()
+
+	if len(latestData) == 0 {
+		menu.AddItem(appkit.NewMenuItemWithAction("No issues detected. Ejection should work fine.", "", func(sender objc.Object) {}))
+	}
+
+	for _, diskWithOpenFiles := range latestData {
+		diskInfo := "Disk: " + diskWithOpenFiles.Disk.DeviceIdentifier + " (" + diskWithOpenFiles.Disk.VolumeName + " at " + diskWithOpenFiles.Disk.MountPoint + ")"
+		menu.AddItem(appkit.NewMenuItemWithAction(diskInfo, "", func(sender objc.Object) {}))
+
+		for _, openFile := range diskWithOpenFiles.OpenFiles {
+			openFileInfo := " - " + openFile.Name + " (PID " + strconv.Itoa(openFile.PID) + ", Process: " + openFile.CommandName + ")"
+			menu.AddItem(appkit.NewMenuItemWithAction(openFileInfo, "", func(sender objc.Object) {
+				ps.KillProcessByPid(openFile.PID)
+				refreshMenuWithData(menu, latestData, app)
+			}))
+		}
+	}
+
+	menu.AddItem(appkit.MenuItem_SeparatorItem())
+
+	menu.AddItem(appkit.NewMenuItemWithAction("Refresh", "r", func(sender objc.Object) {
+		refreshMenuWithData(menu, latestData, app)
+	}))
+	menu.AddItem(appkit.NewMenuItemWithAction("Quit", "q", func(sender objc.Object) { app.Terminate(nil) }))
 }
 
 func setSystemBar(app appkit.Application) {
 	item := appkit.StatusBar_SystemStatusBar().StatusItemWithLength(appkit.VariableStatusItemLength)
 	objc.Retain(&item)
 
-	// img := appkit.Image_ImageWithSystemSymbolNameAccessibilityDescription("multiply.circle.fill", "A multiply symbol inside a filled circle.")
 	img := appkit.Image_ImageWithSystemSymbolNameAccessibilityDescription("eject.circle.fill", "An eject symbol inside a filled circle.")
 	item.Button().SetImage(img)
-	// item.Button().SetTitle(appName)
 	item.Button().SetToolTip(appName)
 
-	menu := appkit.NewMenuWithTitle("ejecting")
-	// menu.AddItem(appkit.NewMenuItemWithAction("Hide", "h", func(sender objc.Object) { app.Hide(nil) }))
-	// menu.AddItem(appkit.NewMenuItemWithAction("Quit", "q", func(sender objc.Object) { app.Terminate(nil) }))
+	menu := appkit.NewMenuWithTitle(shortAppName)
 	item.SetMenu(menu)
 
-	// // Add a menu item for the counter
-	// counterMenuItem := appkit.NewMenuItem()
-	// counterMenuItem.SetTitle("Counter: 0")
-	// menu.AddItem(counterMenuItem)
-
-	// go func() {
-	// 	counter := 0
-
-	// 	// Update the counter every second
-	// 	for {
-	// 		dispatch.MainQueue().DispatchAsync(func() {
-	// 			counterMenuItem.SetTitle("Counter: " + strconv.Itoa(counter))
-	// 		})
-	// 		counter++
-	// 		time.Sleep(1 * time.Second)
-	// 	}
-	// }()
-
+	var latestData structs.DisksWithOpenFiles
+	refreshMenuWithData(menu, latestData, app)
 }

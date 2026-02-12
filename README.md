@@ -4,6 +4,10 @@
 
 **Why-is-it-not-ejecting-for-macOS** is a command-line tool for macOS that helps you diagnose why an external drive (such as a USB stick or external hard disk) cannot be ejected. It provides detailed information about which processes or files are preventing the ejection, making it easier to resolve the issue.
 
+![When there are open files blocking disk eject](/readme/block.png)
+
+![When there are no open files blocking disk eject](/readme/empty.png)
+
 ## How It Works
 
 The tool leverages several native macOS utilities and system calls to trace the cause of the ejection problem:

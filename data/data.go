@@ -18,7 +18,7 @@ func DetermineData() structs.DisksWithOpenFiles {
 	for _, disk := range disks {
 		openFiles, error := lsof.GetOpenFilesByDiskMountPrefix(disk.MountPoint)
 		if error != nil {
-			log.Printf("Warning: Error retrieving open files for disk %s: %v", disk.MountPoint, error)
+			log.Printf("Warning: Error retrieving open files for disk %s: %v (usually means no open files)", disk.MountPoint, error)
 			continue
 		}
 

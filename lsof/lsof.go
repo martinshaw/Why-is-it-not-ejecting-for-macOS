@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"martinshaw.co/ejecting/ps"
 	"martinshaw.co/ejecting/structs"
 	"martinshaw.co/ejecting/utilities"
 )
@@ -23,20 +24,7 @@ func executeLsofCommandForOpenFilesByDiskMountPrefix(mountPathPrefix string) (st
 
 	output, error := cmd.Output()
 	if error != nil {
-		return "", error
-	}
-
-	return string(output), nil
-}
-
-func executePsCommandByPid(pid int) (string, error) {
-	// The -o comm= option tells ps to only output the command path of the process, without any headers or additional formatting
-	// The -p option filters the output to only include the process with the specified PID
-	prompt := fmt.Sprintf("ps -p %d -o comm=", pid)
-	cmd := exec.Command("sh", "-c", prompt)
-
-	output, error := cmd.Output()
-	if error != nil {
+		// When there is an error response, it is usually simply that there are no open files for the specified disk, so there is nothing to grep. This isn't really an error and can be ignored as expected default behavior
 		return "", error
 	}
 
@@ -54,7 +42,7 @@ func parseLineOfOutput(line string) (structs.OpenFile, error) {
 		return structs.OpenFile{}, fmt.Errorf("error parsing PID for %s: %v", fields[0], error)
 	}
 
-	commandPath, error := executePsCommandByPid(pid)
+	commandPath, error := ps.ExecutePsCommandByPid(pid)
 	if error != nil {
 		return structs.OpenFile{}, fmt.Errorf("error executing ps command for PID %d: %v", pid, error)
 	}
@@ -76,17 +64,11 @@ func GetOpenFilesByDiskMountPrefix(mountPathPrefix string) ([]structs.OpenFile, 
 		return nil, error
 	}
 
-	openFilesCount := utilities.GetLineCountOfOutput(output) - 1 // Subtract 1 for the header line
+	openFilesCount := utilities.GetLineCountOfOutput(output)
 	openFiles := make([]structs.OpenFile, 0, openFilesCount)
-	isScanningHeaderRow := true
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
 	for scanner.Scan() {
-		if isScanningHeaderRow {
-			isScanningHeaderRow = false
-			continue
-		}
-
 		if openFile, error := parseLineOfOutput(scanner.Text()); error == nil {
 			openFiles = append(openFiles, openFile)
 		} else {
