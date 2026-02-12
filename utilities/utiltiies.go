@@ -25,3 +25,12 @@ func GetLineCountOfOutput(output string) int {
 	}
 	return lineCount
 }
+
+func GetSystemUsername() string {
+	cmd := exec.Command("whoami")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(output))
+}
