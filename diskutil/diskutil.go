@@ -59,3 +59,8 @@ func GetDisks() ([]structs.DiskPartition, error) {
 
 	return disks, nil
 }
+
+func EjectDiskByIdentifier(disk structs.DiskPartition) error {
+	cmd := exec.Command("diskutil", "eject", disk.DeviceIdentifier)
+	return cmd.Run()
+}

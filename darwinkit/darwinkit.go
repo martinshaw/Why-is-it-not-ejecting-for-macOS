@@ -7,6 +7,7 @@ import (
 	"github.com/progrium/darwinkit/macos/foundation"
 	"github.com/progrium/darwinkit/objc"
 	"martinshaw.co/ejecting/data"
+	"martinshaw.co/ejecting/diskutil"
 	"martinshaw.co/ejecting/ps"
 	"martinshaw.co/ejecting/structs"
 )
@@ -64,11 +65,18 @@ func refreshMenuWithData(menu appkit.Menu, latestData structs.DisksWithOpenFiles
 	}
 
 	for _, diskWithOpenFiles := range latestData {
-		diskInfo := "Disk: " + diskWithOpenFiles.Disk.DeviceIdentifier + " (" + diskWithOpenFiles.Disk.VolumeName + " at " + diskWithOpenFiles.Disk.MountPoint + ")"
-		menu.AddItem(appkit.NewMenuItemWithAction(diskInfo, "", func(sender objc.Object) {}))
+		diskInfo := "Disk: " + diskWithOpenFiles.Disk.DeviceIdentifier + " (" + diskWithOpenFiles.Disk.VolumeName + " at " + diskWithOpenFiles.Disk.MountPoint + ") - Click to kill all and eject"
+		menu.AddItem(appkit.NewMenuItemWithAction(diskInfo, "", func(sender objc.Object) {
+			for _, openFile := range diskWithOpenFiles.OpenFiles {
+				ps.KillProcessByPid(openFile.PID)
+			}
+
+			diskutil.EjectDiskByIdentifier(diskWithOpenFiles.Disk)
+			refreshMenuWithData(menu, latestData, app)
+		}))
 
 		for _, openFile := range diskWithOpenFiles.OpenFiles {
-			openFileInfo := " - " + openFile.Name + " (PID " + strconv.Itoa(openFile.PID) + ", Process: " + openFile.CommandName + ")"
+			openFileInfo := " - " + openFile.Name + " (PID " + strconv.Itoa(openFile.PID) + ", Process: " + openFile.CommandName + ") - Click to kill process"
 			menu.AddItem(appkit.NewMenuItemWithAction(openFileInfo, "", func(sender objc.Object) {
 				ps.KillProcessByPid(openFile.PID)
 				refreshMenuWithData(menu, latestData, app)
