@@ -8,14 +8,14 @@ import (
 	"martinshaw.co/ejecting/structs"
 )
 
-func DetermineData() structs.DisksWithOpenFiles {
+func DetermineData() *structs.DisksWithOpenFiles {
 	disks, error := diskutil.GetDisks()
-	data := make(structs.DisksWithOpenFiles, 0, len(disks))
+	data := make(structs.DisksWithOpenFiles, 0, len(*disks))
 	if error != nil {
 		log.Fatal("Error retrieving disks:", error)
 	}
 
-	for _, disk := range disks {
+	for _, disk := range *disks {
 		openFiles, error := lsof.GetOpenFilesByDiskMountPrefix(disk.MountPoint)
 		if error != nil {
 			log.Printf("Warning: Error retrieving open files for disk %s: %v (usually means no open files)", disk.MountPoint, error)
@@ -24,9 +24,9 @@ func DetermineData() structs.DisksWithOpenFiles {
 
 		data = append(data, structs.DiskWithOpenFiles{
 			Disk:      disk,
-			OpenFiles: openFiles,
+			OpenFiles: *openFiles,
 		})
 	}
 
-	return data
+	return &data
 }

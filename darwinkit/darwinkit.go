@@ -16,20 +16,12 @@ const appName = "Why is it not ejecting? for macOS"
 const shortAppName = "Why is it not ejecting?"
 
 func StartMenubarUi() {
-
-	// runtime.LockOSThread()
-
 	app := appkit.Application_SharedApplication()
 	app.SetActivationPolicy(appkit.ApplicationActivationPolicyAccessory)
 
 	delegate := &appkit.ApplicationDelegate{}
 	delegate.SetApplicationDidFinishLaunching(func(foundation.Notification) {
-		// TODO: In the future, when I figure out how to get a piece of text to display (WTF!), I can add a welcome window that shows some basic info about the menubar ui and how to use it. For now, I'll just go straight to the menubar UI since that's the main focus of the app.
-
 		setSystemBar(app)
-	})
-	delegate.SetApplicationWillFinishLaunching(func(foundation.Notification) {
-		setMainMenu(app)
 	})
 	delegate.SetApplicationShouldTerminateAfterLastWindowClosed(func(appkit.Application) bool {
 		return false
@@ -38,40 +30,23 @@ func StartMenubarUi() {
 	app.Run()
 }
 
-func setMainMenu(app appkit.Application) {
-	menu := appkit.NewMenuWithTitle(shortAppName)
-	app.SetMainMenu(menu)
-
-	mainMenuItem := appkit.NewMenuItemWithSelector("", "", objc.Selector{})
-	mainMenuMenu := appkit.NewMenuWithTitle(shortAppName)
-	// mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Hide", "h", func(sender objc.Object) { app.Hide(nil) }))
-	// mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Close Welcome Window", "", func(sender objc.Object) {
-	// 	for _, window := range app.Windows() {
-	// 		window.Close()
-	// 	}
-	// }))
-	mainMenuMenu.AddItem(appkit.NewMenuItemWithAction("Quit", "q", func(sender objc.Object) { app.Terminate(nil) }))
-	mainMenuItem.SetSubmenu(mainMenuMenu)
-	menu.AddItem(mainMenuItem)
-}
-
-func refreshMenuWithData(menu appkit.Menu, latestData structs.DisksWithOpenFiles, app appkit.Application) {
+func refreshMenuWithData(menu *appkit.Menu, latestData *structs.DisksWithOpenFiles, app *appkit.Application) {
 	latestData = data.DetermineData()
 
 	menu.RemoveAllItems()
 
-	if len(latestData) == 0 {
+	if len(*latestData) == 0 {
 		menu.AddItem(appkit.NewMenuItemWithAction("No issues detected. Ejection should work fine.", "", func(sender objc.Object) {}))
 	}
 
-	for _, diskWithOpenFiles := range latestData {
+	for _, diskWithOpenFiles := range *latestData {
 		diskInfo := "Disk: " + diskWithOpenFiles.Disk.DeviceIdentifier + " (" + diskWithOpenFiles.Disk.VolumeName + " at " + diskWithOpenFiles.Disk.MountPoint + ") - Click to kill all and eject"
 		menu.AddItem(appkit.NewMenuItemWithAction(diskInfo, "", func(sender objc.Object) {
 			for _, openFile := range diskWithOpenFiles.OpenFiles {
 				ps.KillProcessByPid(openFile.PID)
 			}
 
-			diskutil.EjectDiskByIdentifier(diskWithOpenFiles.Disk)
+			diskutil.EjectDiskByIdentifier(&diskWithOpenFiles.Disk)
 			refreshMenuWithData(menu, latestData, app)
 		}))
 
@@ -104,5 +79,5 @@ func setSystemBar(app appkit.Application) {
 	item.SetMenu(menu)
 
 	var latestData structs.DisksWithOpenFiles
-	refreshMenuWithData(menu, latestData, app)
+	refreshMenuWithData(&menu, &latestData, &app)
 }

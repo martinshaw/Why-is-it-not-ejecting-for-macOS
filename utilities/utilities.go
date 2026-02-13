@@ -11,9 +11,9 @@ func IsMacOs() bool {
 	return runtime.GOOS == "darwin"
 }
 
-func GetLineCountOfOutput(output string) int {
+func GetLineCountOfOutput(output *string) int {
 	cmd := exec.Command("wc", "-l")
-	cmd.Stdin = strings.NewReader(output)
+	cmd.Stdin = strings.NewReader(*output)
 	lineCountOutput, err := cmd.Output()
 	if err != nil {
 		return 0

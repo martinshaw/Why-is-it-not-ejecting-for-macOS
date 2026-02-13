@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"howett.net/plist"
+	"martinshaw.co/ejecting/structs"
 )
 
 func ParseFlags() (*string, *string) {
@@ -24,7 +25,7 @@ func ParseFlags() (*string, *string) {
 	return formatFlag, uiFlag
 }
 
-func PrintDataByFormat(formatFlag *string, data interface{}) {
+func PrintDataByFormat(formatFlag *string, data *structs.DisksWithOpenFiles) {
 	switch *formatFlag {
 	case "indent":
 		PrintDataInIndentedFormat(data)
@@ -41,7 +42,7 @@ func PrintDataByFormat(formatFlag *string, data interface{}) {
 	}
 }
 
-func PrintDataInIndentedFormat(data interface{}) {
+func PrintDataInIndentedFormat(data *structs.DisksWithOpenFiles) {
 	jsonString, error := json.MarshalIndent(data, "", "  ")
 	if error != nil {
 		log.Fatal("Error marshaling data to JSON:", error)
@@ -49,7 +50,7 @@ func PrintDataInIndentedFormat(data interface{}) {
 	println(string(jsonString))
 }
 
-func PrintDataInJsonFormat(data interface{}) {
+func PrintDataInJsonFormat(data *structs.DisksWithOpenFiles) {
 	jsonString, error := json.Marshal(data)
 	if error != nil {
 		log.Fatal("Error marshaling data to JSON:", error)
@@ -57,7 +58,7 @@ func PrintDataInJsonFormat(data interface{}) {
 	println(string(jsonString))
 }
 
-func PrintDataInPlistFormat(data interface{}, format int) {
+func PrintDataInPlistFormat(data *structs.DisksWithOpenFiles, format int) {
 	plistString, error := plist.Marshal(data, format)
 	if error != nil {
 		log.Fatal("Error marshaling data to plist:", error)

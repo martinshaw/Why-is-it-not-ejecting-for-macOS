@@ -8,17 +8,18 @@ import (
 	"martinshaw.co/ejecting/structs"
 )
 
-func executeCommandForDiskInfo() (string, error) {
+func executeCommandForDiskInfo() (*string, error) {
 	cmd := exec.Command("diskutil", "list", "-plist")
 	output, err := cmd.Output()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(output), nil
+	outputString := string(output)
+	return &outputString, nil
 }
 
-func decodePlistOutputToDisks(plistOutput string) ([]structs.DiskPartition, error) {
-	decoder := plist.NewDecoder(strings.NewReader(plistOutput))
+func decodePlistOutputToDisks(plistOutput *string) (*[]structs.DiskPartition, error) {
+	decoder := plist.NewDecoder(strings.NewReader(*plistOutput))
 
 	var data struct {
 		AllDisksAndPartitions []struct {
@@ -43,10 +44,10 @@ func decodePlistOutputToDisks(plistOutput string) ([]structs.DiskPartition, erro
 		}
 	}
 
-	return disks, nil
+	return &disks, nil
 }
 
-func GetDisks() ([]structs.DiskPartition, error) {
+func GetDisks() (*[]structs.DiskPartition, error) {
 	output, error := executeCommandForDiskInfo()
 	if error != nil {
 		return nil, error
@@ -60,7 +61,7 @@ func GetDisks() ([]structs.DiskPartition, error) {
 	return disks, nil
 }
 
-func EjectDiskByIdentifier(disk structs.DiskPartition) error {
-	cmd := exec.Command("diskutil", "eject", disk.DeviceIdentifier)
+func EjectDiskByIdentifier(disk *structs.DiskPartition) error {
+	cmd := exec.Command("diskutil", "eject", (*disk).DeviceIdentifier)
 	return cmd.Run()
 }

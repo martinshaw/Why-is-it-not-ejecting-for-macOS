@@ -12,7 +12,7 @@ import (
 	"martinshaw.co/ejecting/utilities"
 )
 
-func executeLsofCommandForOpenFilesByDiskMountPrefix(mountPathPrefix string) (string, error) {
+func executeLsofCommandForOpenFilesByDiskMountPrefix(mountPathPrefix string) (*string, error) {
 	if !strings.HasSuffix(mountPathPrefix, "/") {
 		mountPathPrefix += "/"
 	}
@@ -25,10 +25,11 @@ func executeLsofCommandForOpenFilesByDiskMountPrefix(mountPathPrefix string) (st
 	output, error := cmd.Output()
 	if error != nil {
 		// When there is an error response, it is usually simply that there are no open files for the specified disk, so there is nothing to grep. This isn't really an error and can be ignored as expected default behavior
-		return "", error
+		return nil, error
 	}
 
-	return string(output), nil
+	outputString := string(output)
+	return &outputString, nil
 }
 
 func parseLineOfOutput(line string) (structs.OpenFile, error) {
@@ -58,7 +59,7 @@ func parseLineOfOutput(line string) (structs.OpenFile, error) {
 	}, nil
 }
 
-func GetOpenFilesByDiskMountPrefix(mountPathPrefix string) ([]structs.OpenFile, error) {
+func GetOpenFilesByDiskMountPrefix(mountPathPrefix string) (*[]structs.OpenFile, error) {
 	output, error := executeLsofCommandForOpenFilesByDiskMountPrefix(mountPathPrefix)
 	if error != nil {
 		return nil, error
@@ -67,7 +68,7 @@ func GetOpenFilesByDiskMountPrefix(mountPathPrefix string) ([]structs.OpenFile, 
 	openFilesCount := utilities.GetLineCountOfOutput(output)
 	openFiles := make([]structs.OpenFile, 0, openFilesCount)
 
-	scanner := bufio.NewScanner(strings.NewReader(output))
+	scanner := bufio.NewScanner(strings.NewReader(*output))
 	for scanner.Scan() {
 		if openFile, error := parseLineOfOutput(scanner.Text()); error == nil {
 			openFiles = append(openFiles, openFile)
@@ -77,5 +78,5 @@ func GetOpenFilesByDiskMountPrefix(mountPathPrefix string) ([]structs.OpenFile, 
 		}
 	}
 
-	return openFiles, nil
+	return &openFiles, nil
 }
