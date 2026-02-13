@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"martinshaw.co/ejecting/autostart"
 	"martinshaw.co/ejecting/darwinkit"
 	"martinshaw.co/ejecting/data"
 	"martinshaw.co/ejecting/output"
@@ -24,6 +25,6 @@ func main() {
 	}
 
 	if uiFlag != nil && *uiFlag == "menubar" {
-		darwinkit.StartMenubarUi()
+		darwinkit.StartMenubarUi(autostart.GetAutostartApp())
 	}
 }

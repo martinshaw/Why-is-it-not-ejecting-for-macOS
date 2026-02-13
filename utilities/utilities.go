@@ -1,6 +1,7 @@
 package utilities
 
 import (
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -33,4 +34,13 @@ func GetSystemUsername() string {
 		return ""
 	}
 	return strings.TrimSpace(string(output))
+}
+
+// Get the absolute path of the currently running binary
+func GetBinaryPath() (string, error) {
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return execPath, nil
 }
